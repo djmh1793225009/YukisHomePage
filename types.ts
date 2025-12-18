@@ -1,4 +1,7 @@
 
+// Fix: Import React to resolve 'Cannot find namespace React' errors
+import React from 'react';
+
 export interface SocialLink {
   name: string;
   url: string;
