@@ -6,7 +6,7 @@ import { USER_PROFILE } from '../constants';
 
 const AIAssistant: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: `你好喔！我是元亓的私人助理，你有什么想要了解的吗？Hi! I'm Yuki's virtual assistant. How can I help you today?` }
+    { role: 'assistant', content: `你好喔！我是元亓的私人助理，有什么想要了解的吗？我是人工智能助理，没有记录功能，如需联系本人请从左侧名片获取联系方式。Hi! I'm Yuki's virtual assistant. How can I help you today?` }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
