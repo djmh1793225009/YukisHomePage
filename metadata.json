@@ -1,0 +1,7 @@
+{
+  "name": "Yuki's Home Page",
+  "description": "A premium, dark-themed personal business card featuring fluid animations, 3D tilt effects, and an integrated Gemini-powered AI persona.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
