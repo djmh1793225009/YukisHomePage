@@ -45,7 +45,7 @@ const AIAssistant: React.FC = () => {
           <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
           <span className="text-[10px] font-orbitron tracking-widest text-white/70 uppercase">Persona Node Active</span>
         </div>
-        <div className="text-[9px] text-purple-400 font-mono">G-3-FLASH</div>
+        <div className="text-[9px] text-purple-400 font-mono">Gemini-3-FLASH</div>
       </div>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-4 scroll-smooth">
