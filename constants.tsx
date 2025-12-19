@@ -31,6 +31,7 @@ export const USER_PROFILE: UserProfile = {
     { name: "Generative AI", level: 88 },
     { name: "IT", level: 85 },
     { name: "Travel", level: 83 },
+    { name: "More+", level: 100 },
   ],
   socials: [
     { 
