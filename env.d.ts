@@ -4,11 +4,3 @@ declare namespace NodeJS {
     NODE_ENV: 'development' | 'production' | 'test';
   }
 }
-
-interface ImportMetaEnv {
-  readonly VITE_API_KEY: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}

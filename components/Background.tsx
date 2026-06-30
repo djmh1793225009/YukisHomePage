@@ -1,7 +1,5 @@
 
-import React from 'react';
-
-const Background: React.FC = () => {
+const Background = () => {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden bg-[#0a0a0a]">
       {/* Dynamic Orbs */}

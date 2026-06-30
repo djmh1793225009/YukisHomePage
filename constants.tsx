@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { UserProfile } from './types';
 
 export const USER_PROFILE: UserProfile = {

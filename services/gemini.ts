@@ -101,10 +101,10 @@ export const chatWithPersona = async (message: string, history: { role: 'user' |
 
     // The result text is accessed via the .text property (not a method).
     return response.text || "哎呀，脑回路断了，请再问一次吧？";
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Gemini Error:", error);
-    
-    const errorString = error?.message?.toLowerCase() || "";
+
+    const errorString = (error instanceof Error ? error.message : String(error)).toLowerCase();
     if (errorString.includes("permission denied") || errorString.includes("location not supported")) {
       return "哎呀，您好像在中国，接收不到信号欸（permission denied. ）";
     }

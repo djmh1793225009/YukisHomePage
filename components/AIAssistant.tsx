@@ -32,6 +32,7 @@ const AIAssistant: React.FC = () => {
       const response = await chatWithPersona(input, messages);
       setMessages(prev => [...prev, { role: 'assistant', content: response }]);
     } catch (e) {
+      console.error("Chat error:", e);
       setMessages(prev => [...prev, { role: 'assistant', content: "信号似乎有点微弱喔..." }]);
     } finally {
       setIsLoading(false);

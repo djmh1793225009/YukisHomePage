@@ -71,7 +71,9 @@ const App: React.FC = () => {
                       src={USER_PROFILE.avatar} 
                       alt={USER_PROFILE.name} 
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(USER_PROFILE.name)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+                        if (e.target instanceof HTMLImageElement) {
+                          e.target.src = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(USER_PROFILE.name)}&backgroundColor=b6e3f4,c0aede,d1d4f9`;
+                        }
                       }}
                       className="relative w-24 h-24 lg:w-32 lg:h-32 rounded-[1.5rem] lg:rounded-[2rem] object-cover border-2 border-white/10 shadow-xl bg-[#1a1a1a]"
                     />
