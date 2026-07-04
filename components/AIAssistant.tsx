@@ -9,6 +9,7 @@ const AIAssistant: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingContent, setStreamingContent] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -18,7 +19,7 @@ const AIAssistant: React.FC = () => {
         behavior: 'smooth'
       });
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, streamingContent]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -27,12 +28,17 @@ const AIAssistant: React.FC = () => {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setIsLoading(true);
+    setStreamingContent('');
 
     try {
-      const response = await chatWithPersona(input, messages);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
-    } catch (e) {
-      console.error("Chat error:", e);
+      const fullResponse = await chatWithPersona(input, messages, (delta) => {
+        setStreamingContent(prev => prev + delta);
+      });
+
+      setStreamingContent('');
+      setMessages(prev => [...prev, { role: 'assistant', content: fullResponse }]);
+    } catch {
+      setStreamingContent('');
       setMessages(prev => [...prev, { role: 'assistant', content: "信号似乎有点微弱喔..." }]);
     } finally {
       setIsLoading(false);
@@ -53,15 +59,27 @@ const AIAssistant: React.FC = () => {
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[88%] p-3.5 rounded-2xl text-[13px] leading-relaxed ${
-              msg.role === 'user' 
-                ? 'bg-purple-600/30 text-white rounded-tr-none border border-purple-500/30 shadow-lg shadow-purple-900/10' 
+              msg.role === 'user'
+                ? 'bg-purple-600/30 text-white rounded-tr-none border border-purple-500/30 shadow-lg shadow-purple-900/10'
                 : 'bg-white/5 text-gray-300 rounded-tl-none border border-white/5'
             }`}>
               {msg.content}
             </div>
           </div>
         ))}
-        {isLoading && (
+
+        {/* 流式输出气泡 */}
+        {isLoading && streamingContent && (
+          <div className="flex justify-start">
+            <div className="max-w-[88%] p-3.5 rounded-2xl rounded-tl-none text-[13px] leading-relaxed bg-white/5 text-gray-300 border border-white/5">
+              {streamingContent}
+              <span className="inline-block w-0.5 h-3.5 bg-purple-400 ml-0.5 animate-pulse align-middle" />
+            </div>
+          </div>
+        )}
+
+        {/* 仅在还未收到任何内容时显示三点动画 */}
+        {isLoading && !streamingContent && (
           <div className="flex justify-start">
             <div className="bg-white/5 p-3.5 rounded-2xl rounded-tl-none border border-white/5 flex gap-1.5 items-center">
               <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce"></div>
@@ -82,7 +100,7 @@ const AIAssistant: React.FC = () => {
             placeholder="与数字身份对话..."
             className="w-full bg-white/5 border border-white/10 rounded-xl py-3.5 pl-4 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500/50 transition-all placeholder:text-gray-600 text-white"
           />
-          <button 
+          <button
             onClick={handleSend}
             disabled={isLoading}
             className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 transition-all ${isLoading ? 'text-gray-600' : 'text-purple-400 hover:text-purple-300'}`}

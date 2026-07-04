@@ -1,7 +1,9 @@
-
-export const chatWithPersona = async (message: string, history: { role: 'user' | 'assistant', content: string }[]) => {
-  try {
-    const systemInstruction = `
+export const chatWithPersona = async (
+  message: string,
+  history: { role: 'user' | 'assistant', content: string }[],
+  onChunk: (text: string) => void
+): Promise<string> => {
+  const systemInstruction = `
       # 系统提示词 (System Prompt)
       ---
 
@@ -17,7 +19,6 @@ export const chatWithPersona = async (message: string, history: { role: 'user' |
       - 当前状态: 正在积极求职中，回复消息可能存在延迟。
       - 原则立场: 支持AI办公，但严禁他人未经授权搬运作品或将作品用于AI训练，客观审慎的看待ai。
       - 联系方式：微信号：djmh1793225009，邮箱：me@yumeyuki.top，紧急联络邮箱：urgent@yumeyuki.top，工作联络邮箱：work@yumeyuki.top。x：@djmh1793225009，telegram：@yume_yuki。
-      -
 
       ## Expertise
       - 社交代理: 你能够精准捕捉用户意图并引导至正确的联系方式。
@@ -72,17 +73,16 @@ export const chatWithPersona = async (message: string, history: { role: 'user' |
       4. 输出回复: 发送简洁、友好的对话。
     `;
 
-    const messages = [
-      { role: 'system', content: systemInstruction },
-      ...history.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
-      { role: 'user', content: message }
-    ];
+  const messages = [
+    { role: 'system', content: systemInstruction },
+    ...history.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+    { role: 'user', content: message }
+  ];
 
+  try {
     const response = await fetch('/api/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'agnes-2.0-flash',
         messages,
@@ -91,13 +91,40 @@ export const chatWithPersona = async (message: string, history: { role: 'user' |
       }),
     });
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Agnes API error ${response.status}: ${errText}`);
+    if (!response.ok || !response.body) {
+      throw new Error(`HTTP ${response.status}`);
     }
 
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "哎呀，脑回路断了，请再问一次吧？";
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const parsed = JSON.parse(data);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta) {
+            fullText += delta;
+            onChunk(delta);
+          }
+        } catch {
+          // 忽略非 JSON 行
+        }
+      }
+    }
+
+    return fullText || "哎呀，脑回路断了，请再问一次吧？";
   } catch (error: unknown) {
     console.error("Agnes API Error:", error);
     return "神经链接暂时不稳定，请稍后再试。";
