@@ -24,7 +24,6 @@ export const USER_PROFILE: UserProfile = {
     }
   ],
   skills: [
-    { name: "Furry", level: 99 },
     { name: "Digital Arts", level: 98 },
     { name: "Photography", level: 95 },
     { name: "Generative AI", level: 88 },

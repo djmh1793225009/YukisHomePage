@@ -1,7 +1,5 @@
-
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
-// Fix: Import process to resolve 'Property cwd does not exist on type Process' error
 import process from 'process';
 
 export default defineConfig(({ mode }) => {
@@ -11,8 +9,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // 允许在代码中直接使用 process.env.API_KEY
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || '')
+      'process.env.Agnes_api_key': JSON.stringify(env.Agnes_api_key || '')
     },
     build: {
       outDir: 'dist',

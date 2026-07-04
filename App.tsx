@@ -204,7 +204,7 @@ const App: React.FC = () => {
               <div className="space-y-2">
                 <h3 className="text-lg lg:text-xl font-orbitron text-white">Neural Persona</h3>
                 <p className="text-gray-500 text-[13px] lg:text-sm max-w-[280px] mx-auto">
-                  初始化 AI 人格节点。通过 Gemini 驱动我的数字身份。
+                  初始化 AI 人格节点。通过 Agnes 驱动我的数字身份。
                 </p>
               </div>
               <button 
