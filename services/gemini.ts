@@ -1,8 +1,6 @@
 
 export const chatWithPersona = async (message: string, history: { role: 'user' | 'assistant', content: string }[]) => {
   try {
-    const apiKey = process.env.Agnes_api_key;
-
     const systemInstruction = `
       # 系统提示词 (System Prompt)
       ---
@@ -80,10 +78,9 @@ export const chatWithPersona = async (message: string, history: { role: 'user' |
       { role: 'user', content: message }
     ];
 
-    const response = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
+    const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
