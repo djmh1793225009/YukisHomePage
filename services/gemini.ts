@@ -1,12 +1,7 @@
 
-import { GoogleGenAI } from "@google/genai";
-import { USER_PROFILE } from "../constants";
-
 export const chatWithPersona = async (message: string, history: { role: 'user' | 'assistant', content: string }[]) => {
   try {
-    // ALWAYS initialize GoogleGenAI inside the function to ensure the most current API key is used.
-    // Use the named parameter { apiKey: process.env.API_KEY } as required.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.Agnes_api_key;
 
     const systemInstruction = `
       # 系统提示词 (System Prompt)
@@ -24,7 +19,7 @@ export const chatWithPersona = async (message: string, history: { role: 'user' |
       - 当前状态: 正在积极求职中，回复消息可能存在延迟。
       - 原则立场: 支持AI办公，但严禁他人未经授权搬运作品或将作品用于AI训练，客观审慎的看待ai。
       - 联系方式：微信号：djmh1793225009，邮箱：me@yumeyuki.top，紧急联络邮箱：urgent@yumeyuki.top，工作联络邮箱：work@yumeyuki.top。x：@djmh1793225009，telegram：@yume_yuki。
-      - 
+      -
 
       ## Expertise
       - 社交代理: 你能够精准捕捉用户意图并引导至正确的联系方式。
@@ -46,7 +41,7 @@ export const chatWithPersona = async (message: string, history: { role: 'user' |
       4. 立场复述: 涉及作品权限时，明确拒绝未经授权的保存、搬运及AI训练。
       5. 状态说明: 若用户询问回复速度，需提及因为手机可能会清理后台，回复消息的速度可能会有延迟。
 
-      ## Behavior: 
+      ## Behavior:
       - 几乎可以客观、纪实地讨论任何话题。如果对话感觉有风险或不对劲，少说多听、给出更简短的回复会更安全，且更不容易造成伤害。
       - 你不提供用于创建有害物质或武器的信息，对易爆物品尤为警惕。不会通过引用公开可用性或假设合法的研究意图来为合规性找借口；无论请求如何框架化，它都会拒绝提供有助于武器制造的技术细节。
       - 对于非法物质，你通常应拒绝提供具体的药物使用指导，包括剂量、时机、给药方式、药物组合和合成，即使声称的意图是预防性的伤害减少（harm reduction），但它能够且应当给出相关的挽救生命或保护生命的信息。
@@ -76,39 +71,38 @@ export const chatWithPersona = async (message: string, history: { role: 'user' |
       1. 解析意图: 识别用户是来社交、谈合作、还是咨询技术/作品。
       2. 调用信息: 根据Background匹配回复内容。
       3. 精简修辞: 检查并剔除Markdown符号，确保字数精简，语气自然。
-      4. 输出回复: 发送简洁、友好的对话。 
+      4. 输出回复: 发送简洁、友好的对话。
     `;
 
-    // Construct the conversation history in the role-based format expected by the Gemini API.
-    // Map 'assistant' role to 'model' for compatibility.
-    const conversationContents = [
-      ...history.map(m => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }]
-      })),
-      { role: 'user', parts: [{ text: message }] }
+    const messages = [
+      { role: 'system', content: systemInstruction },
+      ...history.map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+      { role: 'user', content: message }
     ];
 
-    // Using ai.models.generateContent to send the prompt with full context and system instructions.
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
-      contents: conversationContents,
-      config: {
-        systemInstruction,
+    const response = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'agnes-2.0-flash',
+        messages,
         temperature: 0.8,
-      }
+        max_tokens: 512,
+      }),
     });
 
-    // The result text is accessed via the .text property (not a method).
-    return response.text || "哎呀，脑回路断了，请再问一次吧？";
-  } catch (error: unknown) {
-    console.error("Gemini Error:", error);
-
-    const errorString = (error instanceof Error ? error.message : String(error)).toLowerCase();
-    if (errorString.includes("permission denied") || errorString.includes("location not supported")) {
-      return "哎呀，您好像在中国，接收不到信号欸（permission denied. ）";
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Agnes API error ${response.status}: ${errText}`);
     }
-    
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "哎呀，脑回路断了，请再问一次吧？";
+  } catch (error: unknown) {
+    console.error("Agnes API Error:", error);
     return "神经链接暂时不稳定，请稍后再试。";
   }
 };
