@@ -98,29 +98,44 @@ export const chatWithPersona = async (
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let fullText = '';
+    // 跨 chunk 的行缓冲，防止 data: 行被截断在两次 read() 之间
+    let lineBuffer = '';
+
+    const processLine = (line: string) => {
+      if (!line.startsWith('data: ')) return;
+      const data = line.slice(6).trim();
+      if (data === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(data);
+        // 兼容 stream delta.content 和非流式 message.content
+        const delta =
+          parsed.choices?.[0]?.delta?.content ??
+          parsed.choices?.[0]?.message?.content ??
+          '';
+        if (delta) {
+          fullText += delta;
+          onChunk(delta);
+        }
+      } catch {
+        // 忽略非 JSON 行
+      }
+    };
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        // 处理末尾可能残留的不完整行
+        if (lineBuffer.trim()) processLine(lineBuffer.trim());
+        break;
+      }
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
+      lineBuffer += decoder.decode(value, { stream: true });
 
+      // 只处理已经完整的行（以 \n 结尾），剩余部分留到下次
+      const lines = lineBuffer.split('\n');
+      lineBuffer = lines.pop() ?? '';   // 最后一段可能不完整，留缓冲
       for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
-
-        try {
-          const parsed = JSON.parse(data);
-          const delta = parsed.choices?.[0]?.delta?.content;
-          if (delta) {
-            fullText += delta;
-            onChunk(delta);
-          }
-        } catch {
-          // 忽略非 JSON 行
-        }
+        processLine(line.trim());
       }
     }
 
