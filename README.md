@@ -60,6 +60,13 @@ Agnes_api_key=你的_Agnes_API_Key
 npm run dev
 ```
 
+## 部署环境变量
+
+对话接口只支持 `POST /api/chat`；网页不会直接暴露 API Key。
+
+- **Vercel**：在项目的 Environment Variables 中添加 `Agnes_api_key`。
+- **Cloudflare Workers**：执行 `wrangler secret put Agnes_api_key` 后再部署。`worker.ts` 会将 `/api/chat` 的 POST 请求转发到 Agnes，其余请求仍由静态站点处理。
+
 ---
 
 ## 项目结构

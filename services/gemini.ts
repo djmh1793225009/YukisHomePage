@@ -91,8 +91,27 @@ export const chatWithPersona = async (
       }),
     });
 
-    if (!response.ok || !response.body) {
-      throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) {
+      const errorBody = await response.text();
+      let reason = errorBody || response.statusText || '未知错误';
+
+      try {
+        const parsed = JSON.parse(errorBody) as { error?: unknown; message?: unknown };
+        const apiError = parsed.error ?? parsed.message;
+        if (typeof apiError === 'string' && apiError) {
+          reason = apiError;
+        } else if (apiError !== undefined) {
+          reason = JSON.stringify(apiError) ?? String(apiError);
+        }
+      } catch {
+        // 非 JSON 错误响应直接显示原始错误信息
+      }
+
+      throw new Error(`HTTP ${response.status}：${reason}`);
+    }
+
+    if (!response.body) {
+      throw new Error('HTTP 502：API 返回了空响应');
     }
 
     const reader = response.body.getReader();
@@ -142,6 +161,7 @@ export const chatWithPersona = async (
     return fullText || "哎呀，脑回路断了，请再问一次吧？";
   } catch (error: unknown) {
     console.error("Agnes API Error:", error);
-    return "神经链接暂时不稳定，请稍后再试。";
+    const reason = error instanceof Error ? error.message : String(error);
+    return `对话请求失败：${reason}`;
   }
 };

@@ -23,19 +23,34 @@ export default async function handler(req: Request) {
     });
   }
 
-  const upstream = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ ...(body as object), stream: true }),
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ ...(body as object), stream: true }),
+    });
+  } catch {
+    return new Response(JSON.stringify({ error: 'Unable to reach Agnes API' }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 
   if (!upstream.ok) {
     const errText = await upstream.text();
     return new Response(JSON.stringify({ error: errText }), {
       status: upstream.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  if (!upstream.body) {
+    return new Response(JSON.stringify({ error: 'Empty upstream response' }), {
+      status: 502,
       headers: { 'Content-Type': 'application/json' },
     });
   }
