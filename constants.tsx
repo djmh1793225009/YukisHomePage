@@ -6,7 +6,7 @@ export const USER_PROFILE: UserProfile = {
   title: "AIGC Prompt Engineer",
   bio: "一只喜欢吃甜食的小狐狸。",
   id: "djmh1793225009",
-  avatar: "https://temporary-storage.cloudflarer2.yumeyuki.top/squidphoto.webp",
+  avatar: "https://temporary-storage.cloudflarer2.yumeyuki.top/qphoto.webp",
   interactiveContacts: [
     {
       type: "wechat",
